@@ -1,0 +1,16 @@
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# env / os
+.env
+.env.*
+.DS_Store
+Thumbs.db
+
+# backend
+**/target/
+
+# Node
+**/node_modules/
