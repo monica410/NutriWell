@@ -1,3 +1,2 @@
-INSERT IGNORE INTO Users (user_id, username, password) VALUES
-    (1,  'u0',      'p0'),
-    (2,  'u1',      'p1');
+-- Users are created through POST /api/auth/signup.
+-- Do not seed plain-text passwords in this file.
