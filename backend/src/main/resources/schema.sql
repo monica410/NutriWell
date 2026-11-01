@@ -18,14 +18,9 @@ CREATE TABLE IF NOT EXISTS Foods (
     total_sugar_g_per_100       DECIMAL(10, 3),
     sodium_mg_per_100           DECIMAL(10, 3),
     saturated_fat_g_per_100     DECIMAL(10, 3),
-    source                      VARCHAR(50),
-    external_food_id            VARCHAR(100),
+    fdc_id                       VARCHAR(100),
     CONSTRAINT chk_foods_unit CHECK (unit IN ('g', 'ml')),
-    CONSTRAINT unique_foods_source UNIQUE (source, external_food_id),
-    CONSTRAINT chk_foods_source CHECK (
-        (source IS NULL AND external_food_id IS NULL)
-        OR (source IS NOT NULL AND external_food_id IS NOT NULL)
-    ),
+    CONSTRAINT unique_fdc_id UNIQUE (fdc_id),
     CONSTRAINT chk_foods_nutrition CHECK (
         calories_kcal_per_100 >= 0 AND protein_g_per_100 >= 0
         AND carbohydrates_g_per_100 >= 0 AND total_fat_g_per_100 >= 0
