@@ -43,9 +43,22 @@ The endpoint validates the fields, rejects duplicate usernames or email addresse
 
 The React sign-up page sends requests to `http://localhost:8080/api/auth/signup`. Start the backend before submitting the form.
 
-## Current Sprint 2 progress
+## USDA food API
+
+Set `USDA_API_KEY=your_usda_api_key` in your backend run configuration alongside `DB_PASSWORD`. 
+
+Get a key from the [USDA API guide](https://fdc.nal.usda.gov/api-guide/).
+This app searches Foundation, Survey (FNDDS), and Branded foods.
+
+With the backend running:
+- Search: `http://localhost:8080/api/foods/search?query=apple`
+  - accepts optional `pageSize` (default 20 items) and `pageNumber` (default 1).
+- Food details: `http://localhost:8080/api/foods/123` (replace 123 with an fdcId from the search results)
+
+## Current Sprint 3 progress
 
 - Database setup and README: completed.
 - Sign-up API and React sign-up form: implemented locally and ready for team testing.
+- Nutrition tracking backend + add food in frontend
 - Personal nutrition goals: next backend feature.
 - Water, exercise, and sleep tracking: planned after the account flow.

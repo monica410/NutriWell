@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { saveCurrentUserId } from '../utils/currentUser.js'
 import './Auth.css'
 
 function Login() {
@@ -25,6 +26,7 @@ function Login() {
       if (!response.ok) {
         throw new Error(data.error || 'Unable to log in.')
       }
+      saveCurrentUserId(data.userId)
       navigate('/home')
     } catch (requestError) {
       setError(requestError.message)

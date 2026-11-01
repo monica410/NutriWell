@@ -19,6 +19,12 @@ public class UserRepository {
         this.jdbcTemplate = jdbcTemplate;
     }
 
+    public boolean existsById(int userId) {
+        Integer count = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM Users WHERE user_id = ?", Integer.class, userId);
+        return count != null && count > 0;
+    }
+
     public boolean existsByUsernameOrEmail(String username, String email) {
         Integer count = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM Users WHERE username = ? OR email = ?",
