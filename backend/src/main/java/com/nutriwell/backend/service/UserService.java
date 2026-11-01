@@ -1,6 +1,7 @@
 package com.nutriwell.backend.service;
 
 import com.nutriwell.backend.dto.SignupRequest;
+import com.nutriwell.backend.dto.LoginRequest;
 import com.nutriwell.backend.model.User;
 import com.nutriwell.backend.repository.UserRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -35,6 +36,25 @@ public class UserService {
         }
 
         return userRepository.save(username, email, passwordEncoder.encode(password));
+    }
+
+    public User login(LoginRequest request) {
+        String username = clean(request.username());
+        String password = request.password() == null ? "" : request.password();
+        if (username.isEmpty() || password.isEmpty()) {
+            throw new InvalidCredentialsException();
+        }
+        User user = userRepository.findByUsername(username).orElseThrow(InvalidCredentialsException::new);
+        if (!passwordEncoder.matches(password, user.passwordHash())) {
+            throw new InvalidCredentialsException();
+        }
+        return user;
+    }
+
+    public static class InvalidCredentialsException extends RuntimeException {
+        public InvalidCredentialsException() {
+            super("Invalid username or password.");
+        }
     }
 
     private String clean(String value) {

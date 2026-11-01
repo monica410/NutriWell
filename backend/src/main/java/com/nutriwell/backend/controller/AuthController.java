@@ -2,6 +2,8 @@ package com.nutriwell.backend.controller;
 
 import com.nutriwell.backend.dto.SignupRequest;
 import com.nutriwell.backend.dto.SignupResponse;
+import com.nutriwell.backend.dto.LoginRequest;
+import com.nutriwell.backend.dto.LoginResponse;
 import com.nutriwell.backend.model.User;
 import com.nutriwell.backend.service.UserService;
 import org.springframework.http.HttpStatus;
@@ -23,6 +25,19 @@ public class AuthController {
 
     public AuthController(UserService userService) {
         this.userService = userService;
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+        try {
+            User user = userService.login(request);
+            return ResponseEntity.ok(new LoginResponse(
+                    user.userId(), user.username(), user.email(), "Logged in successfully."
+            ));
+        } catch (UserService.InvalidCredentialsException exception) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", exception.getMessage()));
+        }
     }
 
     @PostMapping("/signup")
