@@ -1,2 +1,0 @@
--- Users are created through POST /api/auth/signup.
--- Do not seed plain-text passwords in this file.

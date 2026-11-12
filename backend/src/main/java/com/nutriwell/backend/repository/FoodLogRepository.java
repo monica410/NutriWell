@@ -43,6 +43,11 @@ public class FoodLogRepository {
         return new FoodLog(key.intValue(), userId, food, amount, loggedDate);
     }
 
+    public boolean deleteByIdAndUserId(int foodLogId, int userId) {
+        return jdbcTemplate.update("DELETE FROM FoodLogs WHERE food_log_id = ? AND user_id = ?",
+                foodLogId, userId) > 0;
+    }
+
     public List<FoodLog> findByUserIdAndLoggedDate(int userId, LocalDate loggedDate) {
         return jdbcTemplate.query("""
                 SELECT fl.food_log_id, fl.user_id, fl.amount, fl.logged_date,

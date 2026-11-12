@@ -62,6 +62,16 @@ public class FoodLogService {
         return foodLogRepository.findByUserIdAndLoggedDate(userId, date).stream().map(this::response).toList();
     }
 
+    public void deleteFoodLog(int foodLogId, int userId) {
+        if (foodLogId <= 0) {
+            throw badRequest("A positive food log ID is required.");
+        }
+        validateUser(userId);
+        if (!foodLogRepository.deleteByIdAndUserId(foodLogId, userId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Food log entry was not found.");
+        }
+    }
+
     private FoodLogResponse response(FoodLog log) {
         Food food = log.food();
         Double amount = log.amount();

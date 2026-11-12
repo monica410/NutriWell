@@ -7,6 +7,8 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -41,6 +43,12 @@ public class FoodLogController {
             @RequestParam int userId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         return foodLogService.getFoodLogs(userId, date);
+    }
+
+    @DeleteMapping("/{foodLogId}")
+    public ResponseEntity<Void> deleteFoodLog(@PathVariable int foodLogId, @RequestParam int userId) {
+        foodLogService.deleteFoodLog(foodLogId, userId);
+        return ResponseEntity.noContent().build();
     }
 
     @ExceptionHandler(ResponseStatusException.class)

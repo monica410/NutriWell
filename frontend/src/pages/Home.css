@@ -33,24 +33,19 @@
 
 .home-tab {
   padding: 0.65rem 1rem;
-  border: 1px solid transparent;
+  border: 1px solid #1f6b45;
   border-radius: 8px;
-  background: transparent;
-  color: #526459;
+  background: #1f6b45;
+  color: white;
   font: inherit;
   font-weight: 600;
   cursor: pointer;
 }
 
 .home-tab:hover {
-  background: #f4f8f5;
-  color: #1f6b45;
-}
-
-.home-tab {
-  border-color: #c8d8ce;
-  background: #e8f3ec;
-  color: #1f6b45;
+  border-color: #185637;
+  background: #185637;
+  color: white;
 }
 
 .home-content {
@@ -93,198 +88,14 @@
   background: #185637;
 }
 
-.home-primary-button:disabled,
-.nutrition-secondary-button:disabled,
-.nutrition-food-option:disabled {
+.home-primary-button:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
 
-.nutrition-add-form,
-.nutrition-foods {
-  margin-top: 2rem;
-}
-
-.nutrition-add-form {
-  padding: 1.5rem;
-  border: 1px solid #c8d8ce;
-  border-radius: 12px;
-  background: #f8fbf9;
-}
-
-.nutrition-section-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.nutrition-section-header h2 {
-  margin-bottom: 0.5rem;
-}
-
-.nutrition-description,
-.nutrition-food-option small,
-.nutrition-food-row p {
-  color: #526459;
-  font-size: 0.85rem;
-  line-height: 1.5;
-}
-
-.nutrition-search-form,
-.nutrition-amount-form,
-.nutrition-date {
-  display: grid;
-  gap: 0.5rem;
-}
-
-.nutrition-search-form,
-.nutrition-amount-form {
-  margin-top: 1.5rem;
-}
-
-.nutrition-search-form label,
-.nutrition-amount-form label,
-.nutrition-date {
-  font-weight: 600;
-}
-
-.nutrition-search-controls {
-  display: flex;
-  gap: 0.75rem;
-}
-
-.nutrition-search-controls input {
-  flex: 1;
-  min-width: 0;
-}
-
-.nutrition-add-form input,
-.nutrition-date input {
-  box-sizing: border-box;
-  padding: 0.65rem 0.75rem;
-  border: 1px solid #b8cbbc;
-  border-radius: 8px;
-  background: white;
-  color: #24352a;
-  font: inherit;
-}
-
-.nutrition-amount-form {
-  justify-items: start;
-}
-
-.nutrition-amount-form input {
-  width: min(100%, 240px);
-}
-
-.nutrition-amount-form h3,
-.nutrition-food-row h3 {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
-  overflow-wrap: anywhere;
-}
-
-.nutrition-amount-form .home-primary-button {
-  margin-top: 0.5rem;
-}
-
-.nutrition-secondary-button {
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #b8cbbc;
-  border-radius: 8px;
-  background: white;
-  color: #1f6b45;
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.nutrition-search-results,
-.nutrition-food-list {
-  padding: 0;
-  list-style: none;
-}
-
-.nutrition-search-results {
-  display: grid;
-  gap: 0.5rem;
-  max-height: 320px;
-  overflow-y: auto;
-  margin: 1rem 0 0;
-}
-
-.nutrition-food-option {
-  display: grid;
-  gap: 0.25rem;
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #dce7df;
-  border-radius: 8px;
-  background: white;
-  color: #24352a;
-  text-align: left;
-  font: inherit;
-  overflow-wrap: anywhere;
-  cursor: pointer;
-}
-
-.nutrition-food-option:hover,
-.nutrition-food-option {
-  border-color: #1f6b45;
-  background: #e8f3ec;
-}
-
-.nutrition-food-list {
-  margin: 1.25rem 0 0;
-}
-
-.nutrition-food-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 1rem 0;
-  border-top: 1px solid #dce7df;
-}
-
-.nutrition-calories {
-  flex-shrink: 0;
-  color: #1f6b45;
-  font-weight: 600;
-}
-
-.nutrition-message,
-.nutrition-error,
-.nutrition-success {
-  margin-top: 1rem;
-}
-
-.nutrition-message {
-  color: #526459;
-}
-
-.nutrition-error {
-  color: #b42318;
-}
-
-.nutrition-error .nutrition-secondary-button {
-  margin-top: 0.5rem;
-}
-
-.nutrition-success,
-.nutrition-message a {
-  color: #1f6b45;
-}
-
 .home-tab:focus-visible,
 .home-primary-button:focus-visible,
-.home-content [role='tabpanel']:focus-visible,
-.nutrition-secondary-button:focus-visible,
-.nutrition-food-option:focus-visible,
-.nutrition-add-form input:focus-visible,
-.nutrition-date input:focus-visible {
+.home-content [role='tabpanel']:focus-visible {
   outline: 3px solid #549b70;
   outline-offset: 4px;
 }
@@ -299,24 +110,5 @@
   .home-content {
     margin: 1rem;
     padding: 1.25rem;
-  }
-
-  .nutrition-section-header,
-  .nutrition-search-controls {
-    flex-wrap: wrap;
-  }
-
-  .nutrition-date {
-    width: 100%;
-  }
-
-  .nutrition-add-form {
-    padding: 1rem;
-  }
-
-  .nutrition-food-row {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 0.25rem;
   }
 }

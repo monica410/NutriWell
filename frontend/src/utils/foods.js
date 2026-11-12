@@ -8,6 +8,7 @@ async function request(path, options = {}) {
     if (error.name === 'AbortError') throw error
     throw new Error('Unable to reach the server. Check that the backend is running and try again.', { cause: error })
   }
+  if (response.status === 204) return null
   const data = await response.json().catch(() => null)
   if (!response.ok) {
     throw new Error(data?.error || data?.detail || data?.message || `Request failed (${response.status}).`)
@@ -16,8 +17,8 @@ async function request(path, options = {}) {
   return data
 }
 
-export function searchFoods(query, signal) {
-  const params = new URLSearchParams({ query, pageSize: '20' })
+export function searchFoods(query, pageSize = 20, pageNumber = 1, signal) {
+  const params = new URLSearchParams({ query, pageSize: String(pageSize), pageNumber: String(pageNumber) })
   return request(`/foods/search?${params}`, { signal })
 }
 
@@ -36,4 +37,9 @@ export function addFoodLog(log) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(log),
   })
+}
+
+export function deleteFoodLog(foodLogId, userId) {
+  const params = new URLSearchParams({ userId: String(userId) })
+  return request(`/food-logs/${foodLogId}?${params}`, { method: 'DELETE' })
 }

@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
+import java.sql.Types;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -32,14 +33,14 @@ public class FoodRepository {
             rs.getString("name"),
             rs.getString("unit"),
             new Nutrition(
-                    rs.getDouble("calories_kcal_per_100"),
-                    rs.getDouble("protein_g_per_100"),
-                    rs.getDouble("carbohydrates_g_per_100"),
-                    rs.getDouble("total_fat_g_per_100"),
-                    rs.getDouble("fiber_g_per_100"),
-                    rs.getDouble("total_sugar_g_per_100"),
-                    rs.getDouble("sodium_mg_per_100"),
-                    rs.getDouble("saturated_fat_g_per_100")),
+                    rs.getObject("calories_kcal_per_100", Double.class),
+                    rs.getObject("protein_g_per_100", Double.class),
+                    rs.getObject("carbohydrates_g_per_100", Double.class),
+                    rs.getObject("total_fat_g_per_100", Double.class),
+                    rs.getObject("fiber_g_per_100", Double.class),
+                    rs.getObject("total_sugar_g_per_100", Double.class),
+                    rs.getObject("sodium_mg_per_100", Double.class),
+                    rs.getObject("saturated_fat_g_per_100", Double.class)),
             rs.getString("fdc_id")
     );
 
@@ -70,14 +71,14 @@ public class FoodRepository {
             statement.setString(1, food.name());
             statement.setString(2, food.unit());
             Nutrition nutrition = food.nutrition();
-            statement.setDouble(3, nutrition.caloriesKcal());
-            statement.setDouble(4, nutrition.proteinG());
-            statement.setDouble(5, nutrition.carbohydratesG());
-            statement.setDouble(6, nutrition.totalFatG());
-            statement.setDouble(7, nutrition.fiberG());
-            statement.setDouble(8, nutrition.totalSugarG());
-            statement.setDouble(9, nutrition.sodiumMg());
-            statement.setDouble(10, nutrition.saturatedFatG());
+            statement.setObject(3, nutrition.caloriesKcal(), Types.DOUBLE);
+            statement.setObject(4, nutrition.proteinG(), Types.DOUBLE);
+            statement.setObject(5, nutrition.carbohydratesG(), Types.DOUBLE);
+            statement.setObject(6, nutrition.totalFatG(), Types.DOUBLE);
+            statement.setObject(7, nutrition.fiberG(), Types.DOUBLE);
+            statement.setObject(8, nutrition.totalSugarG(), Types.DOUBLE);
+            statement.setObject(9, nutrition.sodiumMg(), Types.DOUBLE);
+            statement.setObject(10, nutrition.saturatedFatG(), Types.DOUBLE);
             statement.setString(11, food.fdcId());
             return statement;
         }, keyHolder);
