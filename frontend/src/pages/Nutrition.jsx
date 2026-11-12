@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { addFoodLog, deleteFoodLog, getFoodLogs, importFood, searchFoods } from '../utils/foods.js'
+import { addFoodLog, deleteFoodLog, getFoodLogs, importFood, searchFoods, updateFoodLogAmount } from '../utils/foods.js'
 import { NUTRIENTS, sumNutrition } from '../utils/nutrition.js'
 import './Nutrition.css'
 
@@ -33,6 +33,9 @@ function Nutrition({ userId }) {
   const [amount, setAmount] = useState('100')
   const [saving, setSaving] = useState(false)
   const [deletingId, setDeletingId] = useState(null)
+  const [editingId, setEditingId] = useState(null)
+  const [editAmount, setEditAmount] = useState('')
+  const [editError, setEditError] = useState('')
   const [deleteError, setDeleteError] = useState('')
   const [formError, setFormError] = useState('')
   const [notice, setNotice] = useState('')
@@ -45,8 +48,34 @@ function Nutrition({ userId }) {
   const logError = logResult.key === logKey ? logResult.error : ''
   const dailyTotals = sumNutrition(foods)
 
+  async function handleSaveAmount(event, food) {
+    event.preventDefault()
+    if (saving || deletingId !== null) return
+    const quantity = Number(editAmount)
+    if (!Number.isFinite(quantity) || quantity <= 0 || quantity > 9999999.999
+      || !/^\d+(\.\d{1,3})?$/.test(editAmount)) {
+      setEditError('Enter a positive amount up to 9999999.999 with up to three decimal places.')
+      return
+    }
+    setSaving(true)
+    setEditError('')
+    setNotice('')
+    setDeleteNotice('')
+    try {
+      await updateFoodLogAmount(food.foodLogId, userId, quantity)
+      const items = await getFoodLogs(userId, date)
+      setLogResult((previous) => previous.key !== logKey ? previous : { key: logKey, foods: items, error: '' })
+      setEditingId(null)
+      setNotice(`Amount for "${food.foodName}" updated.`)
+    } catch (error) {
+      setEditError(error.message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
   async function handleDeleteFood(food) {
-    if (!userId || saving || deletingId !== null) return
+    if (!userId || saving || deletingId !== null || editingId !== null) return
     setDeletingId(food.foodLogId)
     setDeleteError('')
     setDeleteNotice('')
@@ -148,7 +177,7 @@ function Nutrition({ userId }) {
 
   async function handleAddFood(event) {
     event.preventDefault()
-    if (!selectedFood || !userId || saving || deletingId !== null) return
+    if (!selectedFood || !userId || saving || deletingId !== null || editingId !== null) return
     const quantity = Number(amount)
     if (!Number.isFinite(quantity) || quantity <= 0 || quantity > 9999999.999
       || !/^\d+(\.\d{1,3})?$/.test(amount)) {
@@ -183,18 +212,43 @@ function Nutrition({ userId }) {
 
   return (
     <div className="home-section">
-      <h1 className="home-title">Nutrition</h1>
-      <button
-        className="home-primary-button"
-        type="button"
-        disabled={!userId || loadingLogs || Boolean(logError) || showForm || deletingId !== null}
-        onClick={() => { setShowForm(true); setNotice(''); setDeleteNotice('') }}
-      >
-        Add Food
-      </button>
+      <header className="nutrition-page-header">
+        <div className="nutrition-heading-actions">
+          <h1 className="home-title">Nutrition</h1>
+          <button
+            className="home-primary-button"
+            type="button"
+            disabled={!userId || loadingLogs || Boolean(logError) || showForm || deletingId !== null || editingId !== null}
+            onClick={() => { setShowForm(true); setNotice(''); setDeleteNotice('') }}
+          >
+            Add Food
+          </button>
+        </div>
+        <label className="nutrition-date" htmlFor="food-log-date">
+          Date
+          <input
+            id="food-log-date"
+            type="date"
+            min="1000-01-01"
+            max="3000-12-31"
+            value={date}
+            disabled={saving || deletingId !== null}
+            required
+            onChange={(event) => {
+              if (event.target.validity.valid && event.target.value) {
+                setDate(event.target.value)
+                setNotice('')
+                setDeleteNotice('')
+                setDeleteError('')
+                setEditingId(null)
+                setEditError('')
+              }
+            }}
+          />
+        </label>
+      </header>
 
       {!userId && <p className="nutrition-message"><Link to="/login">Log in</Link> to see and add your foods.</p>}
-      {notice && <p className="nutrition-success" role="status">{notice}</p>}
 
       {showForm && (
         <section id="add-food-form" className="nutrition-add-form">
@@ -279,7 +333,7 @@ function Nutrition({ userId }) {
                 disabled={saving}
                 required
               />
-              <button className="home-primary-button" type="submit" disabled={saving || deletingId !== null || loadingLogs || Boolean(logError)}>
+              <button className="home-primary-button" type="submit" disabled={saving || deletingId !== null || editingId !== null || loadingLogs || Boolean(logError)}>
                 {saving ? 'Adding…' : 'Add to Foods'}
               </button>
             </form>
@@ -295,28 +349,9 @@ function Nutrition({ userId }) {
             <p className="nutrition-description">
               Nutrition for the amounts logged on the selected day.
             </p>
+            {notice && <p className="nutrition-success" role="status">{notice}</p>}
             {deleteNotice && <p className="nutrition-success" role="status">{deleteNotice}</p>}
           </div>
-          <label className="nutrition-date" htmlFor="food-log-date">
-            Date
-            <input
-              id="food-log-date"
-              type="date"
-              min="1000-01-01"
-              max="3000-12-31"
-              value={date}
-              disabled={saving || deletingId !== null}
-              required
-              onChange={(event) => {
-                if (event.target.validity.valid && event.target.value) {
-                  setDate(event.target.value)
-                  setNotice('')
-                  setDeleteNotice('')
-                  setDeleteError('')
-                }
-              }}
-            />
-          </label>
         </div>
         {loadingLogs && <p className="nutrition-message" role="status">Loading foods…</p>}
         {deleteError && <p className="nutrition-error" role="alert">{deleteError}</p>}
@@ -357,13 +392,50 @@ function Nutrition({ userId }) {
                   {foods.map((food) => (
                     <tr key={food.foodLogId}>
                       <th scope="row">{food.foodName}</th>
-                      <td>{nutrientLabel(food.amount)} {food.unit}</td>
+                      <td>
+                        {editingId === food.foodLogId ? (
+                          <form className="nutrition-inline-amount" onSubmit={(event) => handleSaveAmount(event, food)}>
+                            <div className="nutrition-inline-amount-controls">
+                              <input
+                                type="number"
+                                aria-label={`Amount for ${food.foodName} (${food.unit})`}
+                                min="0.001"
+                                max="9999999.999"
+                                step="0.001"
+                                value={editAmount}
+                                onChange={(event) => setEditAmount(event.target.value)}
+                                disabled={saving}
+                                required
+                              />
+                              <span>{food.unit}</span>
+                              <button className="nutrition-secondary-button" type="submit" disabled={saving}>
+                                {saving ? 'Saving…' : 'Save'}
+                              </button>
+                              <button className="nutrition-secondary-button" type="button" disabled={saving}
+                                onClick={() => { setEditingId(null); setEditError('') }}>
+                                Cancel
+                              </button>
+                            </div>
+                            {editError && <p className="nutrition-error" role="alert">{editError}</p>}
+                          </form>
+                        ) : (
+                          <div className="nutrition-inline-amount-controls">
+                            <span>{nutrientLabel(food.amount)} {food.unit}</span>
+                            <button className="nutrition-secondary-button" type="button"
+                              aria-label={`Edit amount for ${food.foodName}`}
+                              disabled={saving || deletingId !== null || editingId !== null || showForm}
+                              onClick={() => { setEditingId(food.foodLogId); setEditAmount(String(food.amount)); setEditError('') }}>
+                              Edit
+                            </button>
+                          </div>
+                        )}
+                      </td>
                       <td>
                         <button
                           className="nutrition-delete-button"
                           type="button"
                           aria-label={`Delete ${food.foodName} (${food.amount} ${food.unit})`}
-                          disabled={saving || deletingId !== null}
+                          disabled={saving || deletingId !== null || editingId !== null}
                           onClick={() => handleDeleteFood(food)}
                         >
                           {deletingId === food.foodLogId ? 'Deleting…' : 'Delete'}

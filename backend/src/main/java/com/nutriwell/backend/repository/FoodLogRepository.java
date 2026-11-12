@@ -43,6 +43,11 @@ public class FoodLogRepository {
         return new FoodLog(key.intValue(), userId, food, amount, loggedDate);
     }
 
+    public boolean updateAmount(int foodLogId, int userId, double amount) {
+        return jdbcTemplate.update("UPDATE FoodLogs SET amount = ? WHERE food_log_id = ? AND user_id = ?",
+                amount, foodLogId, userId) > 0;
+    }
+
     public boolean deleteByIdAndUserId(int foodLogId, int userId) {
         return jdbcTemplate.update("DELETE FROM FoodLogs WHERE food_log_id = ? AND user_id = ?",
                 foodLogId, userId) > 0;

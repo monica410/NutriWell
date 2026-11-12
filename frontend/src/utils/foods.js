@@ -43,3 +43,11 @@ export function deleteFoodLog(foodLogId, userId) {
   const params = new URLSearchParams({ userId: String(userId) })
   return request(`/food-logs/${foodLogId}?${params}`, { method: 'DELETE' })
 }
+
+export function updateFoodLogAmount(foodLogId, userId, amount) {
+  return request(`/food-logs/${foodLogId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId, amount }),
+  })
+}

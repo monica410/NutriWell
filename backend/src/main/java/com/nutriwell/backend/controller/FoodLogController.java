@@ -1,6 +1,7 @@
 package com.nutriwell.backend.controller;
 
 import com.nutriwell.backend.dto.FoodLogRequest;
+import com.nutriwell.backend.dto.FoodLogAmountRequest;
 import com.nutriwell.backend.dto.FoodLogResponse;
 import com.nutriwell.backend.service.FoodLogService;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -8,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -43,6 +45,12 @@ public class FoodLogController {
             @RequestParam int userId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         return foodLogService.getFoodLogs(userId, date);
+    }
+
+    @PatchMapping("/{foodLogId}")
+    public ResponseEntity<Void> updateAmount(@PathVariable int foodLogId, @RequestBody FoodLogAmountRequest request) {
+        foodLogService.updateAmount(foodLogId, request);
+        return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{foodLogId}")

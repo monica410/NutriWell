@@ -1,6 +1,7 @@
 package com.nutriwell.backend.service;
 
 import com.nutriwell.backend.dto.FoodLogRequest;
+import com.nutriwell.backend.dto.FoodLogAmountRequest;
 import com.nutriwell.backend.dto.FoodLogResponse;
 import com.nutriwell.backend.model.Food;
 import com.nutriwell.backend.model.FoodLog;
@@ -60,6 +61,20 @@ public class FoodLogService {
 
         validateUser(userId);
         return foodLogRepository.findByUserIdAndLoggedDate(userId, date).stream().map(this::response).toList();
+    }
+
+    public void updateAmount(int foodLogId, FoodLogAmountRequest request) {
+        if (foodLogId <= 0 || request == null) {
+            throw badRequest("A positive food log ID and amount are required.");
+        }
+        Double amount = request.amount();
+        if (amount == null || amount <= 0 || amount > 9999999) {
+            throw badRequest("Enter a positive amount up to 9999999.");
+        }
+        validateUser(request.userId());
+        if (!foodLogRepository.updateAmount(foodLogId, request.userId(), amount)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Food log entry was not found.");
+        }
     }
 
     public void deleteFoodLog(int foodLogId, int userId) {
