@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS WaterLogs (
     CONSTRAINT fk_water_logs_user FOREIGN KEY (user_id)
         REFERENCES Users (user_id) ON DELETE CASCADE,
     CONSTRAINT chk_water_logs_amount CHECK (amount_ml > 0),
-    INDEX idx_water_logs_user_date (user_id, logged_date)
+    CONSTRAINT unique_water_logs_user_date UNIQUE (user_id, logged_date)
 );
 
 CREATE TABLE IF NOT EXISTS PersonalGoals (
