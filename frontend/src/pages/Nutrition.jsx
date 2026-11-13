@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { addFoodLog, deleteFoodLog, getFoodLogs, importFood, searchFoods, updateFoodLogAmount } from '../utils/foods.js'
-import { NUTRIENTS, sumNutrition } from '../utils/nutrition.js'
+import { addFoodLog, deleteFoodLog, getFoodLogs, importFood, searchFoods, updateFoodLogAmount, NUTRIENTS, sumNutrition } from '../utils/foods.js'
+import { deleteWaterLog, getWaterLog, logWater, updateWaterLog, waterTotal } from '../utils/water.js'
 import './Nutrition.css'
 
 const FOOD_SEARCH_PAGE_SIZE = 20
@@ -297,7 +297,7 @@ function Nutrition({ userId }) {
             </ul>
           )}
           {search.totalPages > 0 && (
-            <nav className="nutrition-search-pagination" aria-label="Food search pages">
+            <nav className="nutrition-search-pagination">
               <button
                 className="nutrition-secondary-button"
                 type="button"
@@ -368,8 +368,8 @@ function Nutrition({ userId }) {
         )}
         {foods.length > 0 && (
           <>
-            <div className="nutrition-table-scroll" role="region" aria-label="Daily food nutrition" tabIndex={0}>
-              <table className="nutrition-table" aria-describedby="nutrition-table-note">
+            <div className="nutrition-table-scroll" role="region" tabIndex={0}>
+              <table className="nutrition-table">
                 <thead>
                   <tr>
                     <th scope="col">Food</th>
@@ -398,7 +398,6 @@ function Nutrition({ userId }) {
                             <div className="nutrition-inline-amount-controls">
                               <input
                                 type="number"
-                                aria-label={`Amount for ${food.foodName} (${food.unit})`}
                                 min="0.001"
                                 max="9999999.999"
                                 step="0.001"
@@ -422,7 +421,6 @@ function Nutrition({ userId }) {
                           <div className="nutrition-inline-amount-controls">
                             <span>{nutrientLabel(food.amount)} {food.unit}</span>
                             <button className="nutrition-secondary-button" type="button"
-                              aria-label={`Edit amount for ${food.foodName}`}
                               disabled={saving || deletingId !== null || editingId !== null || showForm}
                               onClick={() => { setEditingId(food.foodLogId); setEditAmount(String(food.amount)); setEditError('') }}>
                               Edit
@@ -434,7 +432,6 @@ function Nutrition({ userId }) {
                         <button
                           className="nutrition-delete-button"
                           type="button"
-                          aria-label={`Delete ${food.foodName} (${food.amount} ${food.unit})`}
                           disabled={saving || deletingId !== null || editingId !== null}
                           onClick={() => handleDeleteFood(food)}
                         >
@@ -455,7 +452,153 @@ function Nutrition({ userId }) {
           </>
         )}
       </section>
+
+      <WaterLog key={`${userId}:${date}`} userId={userId} date={date} />
     </div>
+  )
+}
+
+const formatAmount = new Intl.NumberFormat(undefined, { maximumFractionDigits: 3 })
+const formLabels = { create: 'Log Water', add: 'Add Amount', update: 'Update Amount' }
+
+function WaterLog({ userId, date }) {
+  const [result, setResult] = useState({ entry: null, loading: Boolean(userId), error: '' })
+  const [retry, setRetry] = useState(0)
+  const [mode, setMode] = useState(null)
+  const [amount, setAmount] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
+  const mutation = useRef(null)
+  const entry = result.entry
+
+  useEffect(() => {
+    if (!userId) return
+    const controller = new AbortController()
+    getWaterLog(userId, date, controller.signal)
+      .then((entry) => {
+        if (!controller.signal.aborted) setResult({ entry, loading: false, error: '' })
+      })
+      .catch((error) => {
+        if (!controller.signal.aborted) setResult({ entry: null, loading: false, error: error.message })
+      })
+    return () => controller.abort()
+  }, [userId, date, retry])
+
+  useEffect(() => () => mutation.current?.abort(), [])
+
+  function openForm(nextMode) {
+    setMode(nextMode)
+    setAmount(nextMode === 'update' ? String(entry.amountMl) : '')
+    setError('')
+    setNotice('')
+  }
+
+  async function saveWater(event) {
+    event.preventDefault()
+    if (busy || !userId) return
+    let total
+    try {
+      total = waterTotal(entry?.amountMl ?? 0, amount, mode)
+    } catch (error) {
+      setError(error.message)
+      return
+    }
+    const controller = new AbortController()
+    mutation.current = controller
+    setBusy(true)
+    setError('')
+    setNotice('')
+    try {
+      let saved
+      if (mode === 'create') {
+        saved = await logWater(userId, date, total, controller.signal)
+      } else {
+        await updateWaterLog(entry.waterLogId, userId, total, controller.signal)
+        saved = { ...entry, amountMl: total }
+      }
+      if (!controller.signal.aborted) {
+        setResult({ entry: saved, loading: false, error: '' })
+        setMode(null)
+        setAmount('')
+        setNotice(mode === 'add' ? 'Water added to the daily total.' : mode === 'update' ? 'Water amount updated.' : 'Water logged.')
+      }
+    } catch (error) {
+      if (!controller.signal.aborted) setError(error.message)
+    } finally {
+      if (!controller.signal.aborted) setBusy(false)
+    }
+  }
+
+  async function removeWater() {
+    if (busy || !entry) return
+    const controller = new AbortController()
+    mutation.current = controller
+    setBusy(true)
+    setError('')
+    setNotice('')
+    try {
+      await deleteWaterLog(entry.waterLogId, userId, controller.signal)
+      if (!controller.signal.aborted) {
+        setResult({ entry: null, loading: false, error: '' })
+        setMode(null)
+        setNotice('Water log deleted for the selected day.')
+      }
+    } catch (error) {
+      if (!controller.signal.aborted) setError(error.message)
+    } finally {
+      if (!controller.signal.aborted) setBusy(false)
+    }
+  }
+
+  return (
+    <section className="nutrition-water">
+      <h2 id="water-title">Water</h2>
+      <p className="nutrition-description">Water intake for the selected day.</p>
+      {notice && <p className="nutrition-success" role="status">{notice}</p>}
+      {result.loading && <p className="nutrition-message" role="status">Loading water…</p>}
+      {result.error && (
+        <div className="nutrition-error" role="alert">
+          <p>{result.error}</p>
+          <button className="nutrition-secondary-button" type="button" onClick={() => {
+            setResult({ entry: null, loading: true, error: '' })
+            setRetry(retry + 1)
+          }}>Try again</button>
+        </div>
+      )}
+      {!result.loading && !result.error && (
+        <>
+          {entry && <p className="nutrition-water-total">{formatAmount.format(entry.amountMl)} ml</p>}
+          {!mode && (
+            <div className="nutrition-water-actions">
+              {entry ? (
+                <>
+                  <button className="home-primary-button" type="button" disabled={busy} onClick={() => openForm('add')}>Add Amount</button>
+                  <button className="nutrition-secondary-button" type="button" disabled={busy} onClick={() => openForm('update')}>Update</button>
+                  <button className="nutrition-delete-button" type="button" disabled={busy} onClick={removeWater}>{busy ? 'Deleting…' : 'Delete'}</button>
+                </>
+              ) : (
+                <button className="home-primary-button" type="button" disabled={!userId || busy} onClick={() => openForm('create')}>Log Water</button>
+              )}
+            </div>
+          )}
+          {mode && (
+            <form className="nutrition-water-form" onSubmit={saveWater}>
+              <label htmlFor="water-amount">{mode === 'add' ? 'Amount to add (ml)' : mode === 'update' ? 'New daily total (ml)' : 'Amount (ml)'}</label>
+              {mode === 'add' && <p className="nutrition-description">This amount will be added to your current total.</p>}
+              {mode === 'update' && <p className="nutrition-description">This amount will replace your current total.</p>}
+              <input id="water-amount" type="number" min="0.001" max="9999999" step="0.001"
+                value={amount} onChange={(event) => setAmount(event.target.value)} disabled={busy} required />
+              <div className="nutrition-water-actions">
+                <button className="home-primary-button" type="submit" disabled={busy}>{busy ? 'Saving…' : formLabels[mode]}</button>
+                <button className="nutrition-secondary-button" type="button" disabled={busy} onClick={() => { setMode(null); setError('') }}>Cancel</button>
+              </div>
+            </form>
+          )}
+        </>
+      )}
+      {error && <p className="nutrition-error" role="alert">{error}</p>}
+    </section>
   )
 }
 

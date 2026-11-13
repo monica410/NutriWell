@@ -1,21 +1,4 @@
-const API_BASE_URL = 'http://localhost:8080/api'
-
-async function request(path, options = {}) {
-  let response
-  try {
-    response = await fetch(`${API_BASE_URL}${path}`, options)
-  } catch (error) {
-    if (error.name === 'AbortError') throw error
-    throw new Error('Unable to reach the server. Check that the backend is running and try again.', { cause: error })
-  }
-  if (response.status === 204) return null
-  const data = await response.json().catch(() => null)
-  if (!response.ok) {
-    throw new Error(data?.error || data?.detail || data?.message || `Request failed (${response.status}).`)
-  }
-  if (data === null) throw new Error('The server returned an unexpected response. Please try again.')
-  return data
-}
+import { request } from './api.js'
 
 export function searchFoods(query, pageSize = 20, pageNumber = 1, signal) {
   const params = new URLSearchParams({ query, pageSize: String(pageSize), pageNumber: String(pageNumber) })
@@ -50,4 +33,27 @@ export function updateFoodLogAmount(foodLogId, userId, amount) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ userId, amount }),
   })
+}
+
+export const NUTRIENTS = [
+  { key: 'caloriesKcal', label: 'Calories', unit: 'kcal' },
+  { key: 'proteinG', label: 'Protein', unit: 'g' },
+  { key: 'carbohydratesG', label: 'Carbs', unit: 'g' },
+  { key: 'totalFatG', label: 'Fat', unit: 'g' },
+  { key: 'saturatedFatG', label: 'Saturated fat', unit: 'g' },
+  { key: 'fiberG', label: 'Fiber', unit: 'g' },
+  { key: 'totalSugarG', label: 'Sugar', unit: 'g' },
+  { key: 'sodiumMg', label: 'Sodium', unit: 'mg' },
+]
+
+// Sum available values, skipping missing nutrients in individual food entries.
+export function sumNutrition(foods) {
+  return Object.fromEntries(NUTRIENTS.map(({ key }) => {
+    let total = 0
+    for (const food of foods) {
+      const value = food.nutrition?.[key]
+      if (Number.isFinite(value)) total += value
+    }
+    return [key, total]
+  }))
 }

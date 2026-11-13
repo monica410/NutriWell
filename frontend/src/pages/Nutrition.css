@@ -7,7 +7,8 @@
 }
 
 .nutrition-add-form,
-.nutrition-foods {
+.nutrition-foods,
+.nutrition-water {
   margin-top: 2rem;
 }
 
@@ -70,6 +71,7 @@
 }
 
 .nutrition-add-form input,
+.nutrition-water-form input,
 .nutrition-inline-amount input,
 .nutrition-date input {
   box-sizing: border-box;
@@ -126,6 +128,10 @@
   font: inherit;
   font-weight: 600;
   cursor: pointer;
+}
+
+.nutrition-secondary-button:hover:not(:disabled) {
+  background: #f4f8f5;
 }
 
 .nutrition-delete-button {
@@ -280,6 +286,7 @@
 }
 
 .nutrition-secondary-button:focus-visible,
+.nutrition-water-form input:focus-visible,
 .nutrition-delete-button:focus-visible,
 .nutrition-food-option:focus-visible,
 .nutrition-table-scroll:focus-visible,
@@ -288,6 +295,36 @@
 .nutrition-date input:focus-visible {
   outline: 3px solid #549b70;
   outline-offset: 4px;
+}
+
+.nutrition-water-total {
+  margin-top: 1rem;
+  color: #1f6b45;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.nutrition-water-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.nutrition-water-form {
+  display: grid;
+  justify-items: start;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.nutrition-water-form label {
+  font-weight: 600;
+}
+
+.nutrition-water-form input {
+  width: min(100%, 240px);
 }
 
 @media (max-width: 600px) {

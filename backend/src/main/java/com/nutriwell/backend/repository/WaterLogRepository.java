@@ -38,7 +38,7 @@ public class WaterLogRepository {
     }
 
     public Optional<WaterLog> findByUserIdAndLoggedDate(int userId, LocalDate date) {
-        return Optional.ofNullable(jdbcTemplate.queryForObject("""
+        return jdbcTemplate.query("""
                 SELECT water_log_id, user_id, amount_ml, logged_date
                 FROM WaterLogs
                 WHERE user_id = ? AND logged_date = ?
@@ -47,7 +47,7 @@ public class WaterLogRepository {
                         rs.getInt("user_id"),
                         rs.getDouble("amount_ml"),
                         rs.getDate("logged_date").toLocalDate()),
-                userId, Date.valueOf(date)));
+                userId, Date.valueOf(date)).stream().findFirst();
     }
 
     public boolean updateAmount(int waterLogId, int userId, Double amount) {
