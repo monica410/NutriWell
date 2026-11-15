@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import Dashboard from './Dashboard.jsx'
 import Nutrition from './Nutrition.jsx'
+import Goals from './Goals.jsx'
 import { getCurrentUserId } from '../utils/currentUser.js'
 import './Home.css'
 
 const tabs = [
   { id: 'dashboard', label: 'Dashboard' },
   { id: 'nutrition', label: 'Nutrition' },
+  { id: 'goals', label: 'Goals' },
 ]
 
 function Home() {
@@ -44,6 +46,12 @@ function Home() {
           hidden={activeTab !== 'nutrition'}
         >
           <Nutrition userId={userId} />
+        </section>
+        <section
+          id="goals-panel"
+          hidden={activeTab !== 'goals'}
+        >
+          <Goals userId={userId} />
         </section>
       </main>
     </div>
