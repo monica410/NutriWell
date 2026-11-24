@@ -122,7 +122,7 @@ function Dashboard({ active = true }) {
       </section>
 
       <section className="dashboard-achievements">
-        <h2>Streaks &amp; badges</h2>
+        <h2 className="home-title">Streaks &amp; Badges</h2>
         <p className="dashboard-message">Current counts through yesterday.</p>
         {badgeError && <p className="dashboard-error" role="alert">{badgeError}</p>}
         <div className="dashboard-achievement-row">

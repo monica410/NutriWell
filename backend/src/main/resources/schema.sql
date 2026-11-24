@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS Foods (
     total_sugar_g_per_100       DECIMAL(10, 3),
     sodium_mg_per_100           DECIMAL(10, 3),
     saturated_fat_g_per_100     DECIMAL(10, 3),
-    fdc_id                       VARCHAR(100),
+    fdc_id                      VARCHAR(100),
     CONSTRAINT chk_foods_unit CHECK (unit IN ('g', 'ml')),
     CONSTRAINT unique_fdc_id UNIQUE (fdc_id),
     CONSTRAINT chk_foods_nutrition CHECK (
@@ -97,3 +97,12 @@ CREATE TABLE IF NOT EXISTS UserBadges (
         REFERENCES Badges (badge_id) ON DELETE RESTRICT
 );
 
+CREATE TABLE IF NOT EXISTS FrequentFoods (
+    user_id         INT NOT NULL,
+    food_id         INT NOT NULL,
+    PRIMARY KEY (user_id, food_id),
+    CONSTRAINT fk_frequent_foods_user FOREIGN KEY (user_id)
+        REFERENCES Users (user_id) ON DELETE CASCADE,
+    CONSTRAINT fk_frequent_foods_food FOREIGN KEY (food_id)
+        REFERENCES Foods (food_id) ON DELETE CASCADE
+);

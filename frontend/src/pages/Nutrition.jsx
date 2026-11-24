@@ -2,17 +2,13 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { addFoodLog, deleteFoodLog, getFoodLogs, importFood, searchFoods, updateFoodLogAmount, NUTRIENTS, sumNutrition } from '../utils/foods.js'
 import { deleteWaterLog, getWaterLog, logWater, updateWaterLog, waterTotal } from '../utils/water.js'
+import { getFrequentFoods, addFrequentFood, removeFrequentFood } from '../utils/frequent.js'
 import './Nutrition.css'
 
 const FOOD_SEARCH_PAGE_SIZE = 20
 const EMPTY_SEARCH = {
   foods: [], loading: false, searched: false, error: '',
   query: '', pageNumber: 1, totalPages: 0,
-}
-
-function today() {
-  const date = new Date()
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
 }
 
 const nutrientFormat = new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 })
@@ -22,7 +18,7 @@ function nutrientLabel(value) {
 }
 
 function Nutrition({ userId, active = true }) {
-  const [date, setDate] = useState(today)
+  const [date, setDate] = useState(() => new Date().toLocaleDateString('en-CA'))
   const [logResult, setLogResult] = useState({ key: null, foods: [], error: '' })
   const [showForm, setShowForm] = useState(false)
   const [query, setQuery] = useState('')
@@ -39,6 +35,75 @@ function Nutrition({ userId, active = true }) {
   const [formError, setFormError] = useState('')
   const [notice, setNotice] = useState('')
   const [deleteNotice, setDeleteNotice] = useState('')
+  const [frequentResult, setFrequentResult] = useState({ userId: null, foods: [], error: '' })
+  const [frequentBusy, setFrequentBusy] = useState(false)
+  const [frequentError, setFrequentError] = useState('')
+  const [frequentNotice, setFrequentNotice] = useState('')
+  const frequentVersion = useRef(0)
+  const frequents = frequentResult.userId === userId ? frequentResult.foods : []
+  const loadingFrequents = Boolean(userId) && frequentResult.userId !== userId
+  const frequentsUnavailable = loadingFrequents || Boolean(frequentResult.error)
+  const isFrequent = (foodId) => frequents.some((food) => food.foodId === foodId)
+
+  useEffect(() => {
+    if (!userId || !active) return
+    const controller = new AbortController()
+    const version = frequentVersion.current
+    getFrequentFoods(userId, controller.signal)
+      .then((items) => {
+        if (!controller.signal.aborted && version === frequentVersion.current) {
+          setFrequentResult({ userId, foods: items, error: '' })
+        }
+      })
+      .catch((error) => {
+        if (!controller.signal.aborted && version === frequentVersion.current) {
+          setFrequentResult({ userId, foods: [], error: error.message })
+        }
+      })
+    return () => controller.abort()
+  }, [userId, active])
+
+  async function addFrequent(food) {
+    if (!userId || frequentsUnavailable || frequentBusy || isFrequent(food.foodId)) return
+    frequentVersion.current++
+    setFrequentBusy(true)
+    setFrequentError('')
+    setFrequentNotice('')
+    try {
+      const saved = await addFrequentFood(userId, food.foodId)
+      setFrequentResult((previous) => ({ ...previous,
+        foods: [...previous.foods.filter((item) => item.foodId !== saved.foodId), saved]
+          .sort((a, b) => a.name.localeCompare(b.name)),
+      }))
+      setFrequentNotice(`${food.name || food.foodName} saved to frequent foods.`)
+    } catch (error) {
+      setFrequentError(error.message)
+    } finally {
+      frequentVersion.current++
+      setFrequentBusy(false)
+    }
+  }
+
+  async function deleteFrequent(food) {
+    if (!userId || frequentsUnavailable || frequentBusy) return
+    frequentVersion.current++
+    setFrequentBusy(true)
+    setFrequentError('')
+    setFrequentNotice('')
+    try {
+      await removeFrequentFood(userId, food.foodId)
+      setFrequentResult((previous) => ({ ...previous,
+        foods: previous.foods.filter((item) => item.foodId !== food.foodId),
+      }))
+      setFrequentNotice(`${food.name || food.foodName} removed from frequent foods.`)
+    } catch (error) {
+      setFrequentError(error.message)
+    } finally {
+      frequentVersion.current++
+      setFrequentBusy(false)
+    }
+  }
+
   const searchRequest = useRef(null)
   const selectionRequest = useRef(null)
   const logKey = userId ? `${userId}:${date}` : null
@@ -249,6 +314,9 @@ function Nutrition({ userId, active = true }) {
 
       {!userId && <p className="nutrition-message"><Link to="/login">Log in</Link> to see and add your foods.</p>}
 
+      {frequentResult.error && <p className="nutrition-error" role="alert">Unable to load frequent foods. {frequentResult.error}</p>}
+      {frequentError && <p className="nutrition-error" role="alert">{frequentError}</p>}
+
       {showForm && (
         <section id="add-food-form" className="nutrition-add-form">
           <div className="nutrition-section-header">
@@ -257,8 +325,33 @@ function Nutrition({ userId, active = true }) {
               Cancel
             </button>
           </div>
+          <section className="nutrition-frequents">
+            <h3>Frequent foods</h3>
+            {loadingFrequents && <p role="status">Loading frequent foods…</p>}
+            {!loadingFrequents && !frequentResult.error && frequents.length === 0 && (
+              <p className="nutrition-description">No frequent foods yet. Use Add in the food table to save a food.</p>
+            )}
+            {frequents.length > 0 && (
+              <ul className="nutrition-search-results">
+                {frequents.map((food) => (
+                  <li className="nutrition-frequent-row" key={food.foodId}>
+                    <button type="button" className="nutrition-food-option" disabled={saving}
+                      onClick={() => {
+                        selectionRequest.current?.abort()
+                        setSelecting(false)
+                        setSelectedFood(food)
+                        setAmount('100')
+                        setFormError('')
+                      }}>
+                      {food.name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
           <form className="nutrition-search-form" onSubmit={handleSearch}>
-            <label htmlFor="food-search">Search for a food</label>
+            <h3>Search for a food</h3>
             <div className="nutrition-search-controls">
               <input
                 id="food-search"
@@ -425,14 +518,22 @@ function Nutrition({ userId, active = true }) {
                         )}
                       </td>
                       <td>
-                        <button
-                          className="nutrition-delete-button"
-                          type="button"
-                          disabled={saving || deletingId !== null || editingId !== null}
-                          onClick={() => handleDeleteFood(food)}
-                        >
-                          {deletingId === food.foodLogId ? 'Deleting…' : 'Delete'}
-                        </button>
+                        <div className="nutrition-row-actions">
+                          <button
+                            className="nutrition-delete-button"
+                            type="button"
+                            disabled={saving || deletingId !== null || editingId !== null}
+                            onClick={() => handleDeleteFood(food)}
+                          >
+                            {deletingId === food.foodLogId ? 'Deleting…' : 'Delete'}
+                          </button>
+                          <button type="button" className="nutrition-secondary-button"
+                            disabled={isFrequent(food.foodId) || frequentBusy || frequentsUnavailable}
+                            aria-label={`Add ${food.foodName} to frequent foods`}
+                            onClick={() => addFrequent(food)}>
+                            Add frequent
+                          </button>
+                        </div>
                       </td>
                       {NUTRIENTS.map(({ key }) => (
                         <td key={key}>{nutrientLabel(food.nutrition?.[key])}</td>
@@ -450,6 +551,29 @@ function Nutrition({ userId, active = true }) {
       </section>
 
       <WaterLog key={`${userId}:${date}`} userId={userId} date={date} active={active} />
+
+      {userId && (
+        <section className="nutrition-saved-frequents">
+          <h2>Frequently eaten foods</h2>
+          {frequentNotice && <p className="nutrition-success" role="status">{frequentNotice}</p>}
+          {loadingFrequents && <p role="status">Loading frequent foods…</p>}
+          {!loadingFrequents && !frequentResult.error && frequents.length === 0 && (
+            <p className="nutrition-message">No frequent foods saved yet. Use Add frequent in the food table to save a food.</p>
+          )}
+          {frequents.length > 0 && (
+            <ul className="nutrition-saved-frequents-list">
+              {frequents.map((food) => (
+                <li className="nutrition-frequent-row" key={food.foodId}>
+                  <span>{food.name}</span>
+                  <button type="button" className="nutrition-delete-button"
+                    disabled={frequentBusy || frequentsUnavailable}
+                    onClick={() => deleteFrequent(food)}>Remove</button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
     </div>
   )
 }
