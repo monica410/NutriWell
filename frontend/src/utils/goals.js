@@ -10,11 +10,11 @@ export async function getGoals(userId, signal) {
   }
 }
 
-export function saveGoal(userId, target, value, hasGoals, signal) {
+export function saveGoal(userId, target, value, hasGoals, isMax = false, signal) {
   return request('/goals', {
     method: hasGoals ? 'PATCH' : 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ userId, [target]: value }),
+    body: JSON.stringify({ userId, [target]: value, maxGoals: { [target]: isMax } }),
     signal,
   })
 }

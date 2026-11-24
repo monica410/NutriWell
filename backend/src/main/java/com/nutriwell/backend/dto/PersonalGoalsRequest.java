@@ -1,5 +1,7 @@
 package com.nutriwell.backend.dto;
 
+import java.util.Map;
+
 public record PersonalGoalsRequest(
         Integer userId,
         Double caloriesKcal,
@@ -10,5 +12,6 @@ public record PersonalGoalsRequest(
         Double totalSugarG,
         Double sodiumMg,
         Double saturatedFatG,
-        Double waterMl
+        Double waterMl,
+        Map<String, Boolean> maxGoals
 ) { }

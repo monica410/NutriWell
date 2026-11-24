@@ -48,7 +48,8 @@
   font-size: 0.9rem;
 }
 
-.goals-target input {
+.goals-target input,
+.goals-target select {
   box-sizing: border-box;
   width: min(100%, 320px);
   min-width: 0;
@@ -93,6 +94,7 @@
 }
 
 .goals-target input:focus-visible,
+.goals-target select:focus-visible,
 .goals-secondary-button:focus-visible,
 .goals-remove-button:focus-visible {
   outline: 3px solid #549b70;
@@ -113,6 +115,11 @@
   display: grid;
   justify-items: start;
   gap: 0.75rem;
+}
+
+.goals-target-type {
+  color: #24352a;
+  font-size: 0.9rem;
 }
 
 .goals-progress-track {

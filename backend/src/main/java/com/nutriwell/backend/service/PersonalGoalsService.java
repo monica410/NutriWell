@@ -9,8 +9,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Set;
+
 @Service
 public class PersonalGoalsService {
+    private static final Set<String> TARGET_NAMES = Set.of("caloriesKcal", "proteinG", "carbohydratesG",
+            "totalFatG", "fiberG", "totalSugarG", "sodiumMg", "saturatedFatG", "waterMl");
+
     private final PersonalGoalsRepository goalsRepository;
     private final UserRepository userRepository;
 
@@ -20,7 +25,7 @@ public class PersonalGoalsService {
     }
 
     public PersonalGoals createGoals(PersonalGoalsRequest request) {
-        validateRequest(request);
+        validateRequest(request, false);
         try {
             return goalsRepository.save(request);
         } catch (DuplicateKeyException exception) {
@@ -35,7 +40,7 @@ public class PersonalGoalsService {
     }
 
     public PersonalGoals updateGoals(PersonalGoalsRequest request) {
-        validateRequest(request);
+        validateRequest(request, true);
         if (!goalsRepository.update(request)) throw notFound();
         return findGoals(request.userId());
     }
@@ -58,7 +63,7 @@ public class PersonalGoalsService {
         return goalsRepository.findByUserId(userId).orElseThrow(PersonalGoalsService::notFound);
     }
 
-    private void validateRequest(PersonalGoalsRequest request) {
+    private void validateRequest(PersonalGoalsRequest request, boolean updating) {
         if (request == null) throw badRequest("Null request.");
         Double[] targets = {request.caloriesKcal(), request.proteinG(), request.carbohydratesG(),
                 request.totalFatG(), request.fiberG(), request.totalSugarG(), request.sodiumMg(),
@@ -71,7 +76,18 @@ public class PersonalGoalsService {
                 throw badRequest("Goal targets must positive number below 9999999.999.");
             }
         }
-        if (!hasTarget) throw badRequest("At least one goal target is required.");
+        boolean hasFlags = request.maxGoals() != null && !request.maxGoals().isEmpty();
+        if (request.maxGoals() != null) {
+            request.maxGoals().forEach((name, isMax) -> {
+                if (name == null || !TARGET_NAMES.contains(name)) {
+                    throw badRequest("Unknown maxGoals nutrient: " + name);
+                }
+                if (isMax == null) throw badRequest("maxGoals values must be true or false.");
+            });
+        }
+        if (!hasTarget && !(updating && hasFlags)) {
+            throw badRequest("At least one goal target is required (or a maxGoals update for PATCH).");
+        }
         validateUser(request.userId());
     }
 

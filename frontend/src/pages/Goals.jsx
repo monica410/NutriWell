@@ -81,16 +81,18 @@ function Goals({ userId, active = true }) {
 
   async function handleSave(event, target) {
     event.preventDefault()
+    const formData = new FormData(event.currentTarget)
+    const isMax = formData.get('goalType') === 'max'
     let quantity
     try {
-      quantity = parseGoalValue(new FormData(event.currentTarget).get('amount'))
+      quantity = parseGoalValue(formData.get('amount'))
     } catch (validationError) {
       setNotice('')
       setError(validationError.message)
       return
     }
     const saved = await performAction(
-      () => saveGoal(userId, target.key, quantity, goals !== null),
+      () => saveGoal(userId, target.key, quantity, goals !== null, isMax),
       `${target.label} goal saved.`,
     )
     if (saved) {
@@ -101,7 +103,9 @@ function Goals({ userId, active = true }) {
   function handleRemove(target) {
     performAction(async () => {
       await removeGoal(userId, target.key)
-      return { ...goals, [target.key]: null }
+      const maxGoals = { ...goals.maxGoals }
+      delete maxGoals[target.key]
+      return { ...goals, [target.key]: null, maxGoals }
     }, `${target.label} goal removed.`)
   }
 
@@ -154,6 +158,7 @@ function Goals({ userId, active = true }) {
         {TARGETS.map((target) => {
           const value = goals?.[target.key]
           const isSet = value != null
+          const isMax = goals?.maxGoals?.[target.key] === true
           const current = totals?.[target.key]
           const progressLabel = `${current == null ? '—' : current} / ${isSet ? value : '—'} ${target.unit}`
           const percentage = (!Number.isFinite(current) || !Number.isFinite(value) || value <= 0)
@@ -163,6 +168,11 @@ function Goals({ userId, active = true }) {
             <section key={target.key} className="goals-target">
               <h2 id={`goal-title-${target.key}`}>{target.label} <span>({target.unit})</span></h2>
               {isSet && (
+                <p className="goals-target-type">
+                  {isMax ? 'Maximum — at most' : 'Minimum — at least'} {value} {target.unit} per day
+                </p>
+              )}
+              {isSet && (
                 <div className="goals-progress-track" role="progressbar">
                   <div className="goals-progress-bar" style={{ width: `${Math.min(100, percentage ?? 0)}%` }} />
                   <span className="goals-progress-label">{progressLabel}</span>
@@ -170,6 +180,11 @@ function Goals({ userId, active = true }) {
               )}
               {editingTarget === target.key ? (
                 <form className="goals-edit-form" onSubmit={(event) => handleSave(event, target)}>
+                  <label htmlFor={`goal-type-${target.key}`}>Goal type</label>
+                  <select id={`goal-type-${target.key}`} name="goalType" defaultValue={isMax ? 'max' : 'min'}>
+                    <option value="min">Minimum (at least)</option>
+                    <option value="max">Maximum (at most)</option>
+                  </select>
                   <label htmlFor={`goal-${target.key}`}>{isSet ? 'New daily target' : 'Daily target'} ({target.unit})</label>
                   <input id={`goal-${target.key}`} name="amount" type="number" min="0" max="9999999.999"
                     step="0.001" defaultValue={value ?? ''} required />

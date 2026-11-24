@@ -65,6 +65,7 @@ CREATE TABLE IF NOT EXISTS PersonalGoals (
     sodium_mg           DECIMAL(10, 3),
     saturated_g         DECIMAL(10, 3),
     water_ml            DECIMAL(10, 3),
+    max_goals           JSON, -- nutrient name -> true (maximum), false (minimum); omitted means minimum
     CONSTRAINT fk_personal_goals_user FOREIGN KEY (user_id)
         REFERENCES Users (user_id) ON DELETE CASCADE,
     CONSTRAINT chk_personal_goals_targets CHECK (
