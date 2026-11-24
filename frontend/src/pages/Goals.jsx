@@ -13,7 +13,6 @@ function today() {
 }
 
 function Goals({ userId, active = true }) {
-  const [reload, setReload] = useState(0)
   const [result, setResult] = useState({ key: null, goals: null, error: '' })
   const [progress, setProgress] = useState({ key: null, totals: null, error: '' })
   const [busy, setBusy] = useState(false)
@@ -21,7 +20,7 @@ function Goals({ userId, active = true }) {
   const [notice, setNotice] = useState('')
   const [editingTarget, setEditingTarget] = useState(null)
   const date = today()
-  const loadKey = userId ? `${userId}:${date}:${reload}` : null
+  const loadKey = userId ? `${userId}:${date}` : null
   const loading = Boolean(userId) && result.key !== loadKey
   const goals = result.key === loadKey ? result.goals : null
   const loadError = result.key === loadKey ? result.error : ''
@@ -129,13 +128,6 @@ function Goals({ userId, active = true }) {
           <p className="goals-description">Daily nutrition and water goals.</p>
         </div>
         <div className="goals-actions">
-          <button type="button" className="goals-secondary-button" disabled={loading || busy}
-            onClick={() => {
-              setError(''); setNotice(''); setEditingTarget(null)
-              setReload((value) => value + 1)
-            }}>
-            Refresh
-          </button>
           <button type="button" className="goals-remove-button" disabled={disabled || goals === null}
             onClick={handleRemoveAll}>
             Remove all goals
@@ -152,7 +144,7 @@ function Goals({ userId, active = true }) {
       {loading && <p className="goals-message" role="status">Loading goals…</p>}
       {(loadError || error) && <p className="goals-error" role="alert">{loadError || error}</p>}
       {notice && <p className="goals-success" role="status">{notice}</p>}
-      {progressError && <p className="goals-error" role="alert">Today’s progress is unavailable. {progressError} Use Refresh to try again.</p>}
+      {progressError && <p className="goals-error" role="alert">Today’s progress is unavailable. {progressError}</p>}
 
       <fieldset className="goals-fields" disabled={disabled}>
         {TARGETS.map((target) => {

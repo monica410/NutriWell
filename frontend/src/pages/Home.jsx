@@ -41,22 +41,22 @@ function Home() {
           id="dashboard-panel"
           hidden={activeTab !== 'dashboard'}
         >
-          <Dashboard />
+          <Dashboard active={activeTab === 'dashboard'} />
         </section>
         <section
           id="nutrition-panel"
           hidden={activeTab !== 'nutrition'}
         >
-          <Nutrition userId={userId} />
+          <Nutrition userId={userId} active={activeTab === 'nutrition'} />
         </section>
         <section
           id="goals-panel"
           hidden={activeTab !== 'goals'}
         >
-          <Goals userId={userId} />
+          <Goals userId={userId} active={activeTab === 'goals'} />
         </section>
         <section id="badges-panel" hidden={activeTab !== 'badges'}>
-          {activeTab === 'badges' && <Badges userId={userId} />}
+          <Badges userId={userId} active={activeTab === 'badges'} />
         </section>
       </main>
     </div>

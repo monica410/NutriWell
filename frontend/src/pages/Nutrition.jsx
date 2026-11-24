@@ -21,9 +21,8 @@ function nutrientLabel(value) {
   return Number.isFinite(value) ? nutrientFormat.format(value) : '—'
 }
 
-function Nutrition({ userId }) {
+function Nutrition({ userId, active = true }) {
   const [date, setDate] = useState(today)
-  const [reload, setReload] = useState(0)
   const [logResult, setLogResult] = useState({ key: null, foods: [], error: '' })
   const [showForm, setShowForm] = useState(false)
   const [query, setQuery] = useState('')
@@ -42,7 +41,7 @@ function Nutrition({ userId }) {
   const [deleteNotice, setDeleteNotice] = useState('')
   const searchRequest = useRef(null)
   const selectionRequest = useRef(null)
-  const logKey = userId ? `${userId}:${date}:${reload}` : null
+  const logKey = userId ? `${userId}:${date}` : null
   const loadingLogs = Boolean(userId) && logResult.key !== logKey
   const foods = logResult.key === logKey ? logResult.foods : []
   const logError = logResult.key === logKey ? logResult.error : ''
@@ -95,7 +94,7 @@ function Nutrition({ userId }) {
   }
 
   useEffect(() => {
-    if (!userId || !date) return
+    if (!userId || !date || !active) return
     const controller = new AbortController()
     getFoodLogs(userId, date, controller.signal)
       .then((items) => {
@@ -105,7 +104,7 @@ function Nutrition({ userId }) {
         if (!controller.signal.aborted) setLogResult({ key: logKey, foods: [], error: error.message })
       })
     return () => controller.abort()
-  }, [userId, date, logKey])
+  }, [userId, date, logKey, active])
 
   useEffect(() => () => {
     searchRequest.current?.abort()
@@ -358,9 +357,6 @@ function Nutrition({ userId }) {
         {logError && (
           <div className="nutrition-error" role="alert">
             <p>{logError}</p>
-            <button className="nutrition-secondary-button" type="button" disabled={saving} onClick={() => setReload(reload + 1)}>
-              Try again
-            </button>
           </div>
         )}
         {userId && !loadingLogs && !logError && foods.length === 0 && (
@@ -453,7 +449,7 @@ function Nutrition({ userId }) {
         )}
       </section>
 
-      <WaterLog key={`${userId}:${date}`} userId={userId} date={date} />
+      <WaterLog key={`${userId}:${date}`} userId={userId} date={date} active={active} />
     </div>
   )
 }
@@ -461,9 +457,8 @@ function Nutrition({ userId }) {
 const formatAmount = new Intl.NumberFormat(undefined, { maximumFractionDigits: 3 })
 const formLabels = { create: 'Log Water', add: 'Add Amount', update: 'Update Amount' }
 
-function WaterLog({ userId, date }) {
+function WaterLog({ userId, date, active }) {
   const [result, setResult] = useState({ entry: null, loading: Boolean(userId), error: '' })
-  const [retry, setRetry] = useState(0)
   const [mode, setMode] = useState(null)
   const [amount, setAmount] = useState('')
   const [busy, setBusy] = useState(false)
@@ -473,7 +468,7 @@ function WaterLog({ userId, date }) {
   const entry = result.entry
 
   useEffect(() => {
-    if (!userId) return
+    if (!userId || !active) return
     const controller = new AbortController()
     getWaterLog(userId, date, controller.signal)
       .then((entry) => {
@@ -483,7 +478,7 @@ function WaterLog({ userId, date }) {
         if (!controller.signal.aborted) setResult({ entry: null, loading: false, error: error.message })
       })
     return () => controller.abort()
-  }, [userId, date, retry])
+  }, [userId, date, active])
 
   useEffect(() => () => mutation.current?.abort(), [])
 
@@ -560,10 +555,6 @@ function WaterLog({ userId, date }) {
       {result.error && (
         <div className="nutrition-error" role="alert">
           <p>{result.error}</p>
-          <button className="nutrition-secondary-button" type="button" onClick={() => {
-            setResult({ entry: null, loading: true, error: '' })
-            setRetry(retry + 1)
-          }}>Try again</button>
         </div>
       )}
       {!result.loading && !result.error && (

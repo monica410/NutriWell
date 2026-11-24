@@ -8,12 +8,11 @@ const formatDate = (date) => new Date(`${date}T12:00:00`).toLocaleDateString('en
 })
 const days = (count) => `${count} ${count === 1 ? 'day' : 'days'}`
 
-function Badges({ userId }) {
-  const [reload, setReload] = useState(0)
+function Badges({ userId, active = true }) {
   const [result, setResult] = useState({ loading: true, error: '', streaks: null, badges: [] })
 
   useEffect(() => {
-    if (!userId) return
+    if (!userId || !active) return
     const controller = new AbortController()
     getBadgeProgress(userId, controller.signal)
       .then((data) => {
@@ -21,11 +20,11 @@ function Badges({ userId }) {
       })
       .catch((error) => {
         if (!controller.signal.aborted) {
-          setResult({ loading: false, error: error.message, streaks: null, badges: [] })
+          setResult((previous) => ({ ...previous, loading: false, error: error.message }))
         }
       })
     return () => controller.abort()
-  }, [userId, reload])
+  }, [userId, active])
 
   if (!userId) return <p>Please <Link to="/login">log in</Link> to see your badges.</p>
 
@@ -35,17 +34,15 @@ function Badges({ userId }) {
         <div>
           <h1 className="home-title">Badges</h1>
         </div>
-        <button type="button" className="goals-secondary-button" disabled={result.loading}
-          onClick={() => {
-            setResult({ loading: true, error: '', streaks: null, badges: [] })
-            setReload((value) => value + 1)
-          }}>
-          {result.loading ? 'Loading…' : 'Refresh'}
-        </button>
+
       </div>
 
       {result.loading && <p role="status">Loading streaks and badges…</p>}
-      {result.error && <p className="badges-error" role="alert">{result.error}</p>}
+      {result.error && (
+        <div role="alert">
+          <p className="badges-error">{result.error}</p>
+        </div>
+      )}
       {result.streaks && (
         <>
           <h2>Current streaks</h2>
