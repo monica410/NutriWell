@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { getFoodLogs, sumNutrition } from '../utils/foods.js'
 import { getWaterLog } from '../utils/water.js'
+import { getBadgeProgress } from '../utils/badges.js'
 import { getCurrentUserId } from '../utils/currentUser.js'
 import './Dashboard.css'
 
@@ -14,34 +15,48 @@ function Dashboard({ active = true }) {
   const [summary, setSummary] = useState({ foods: [], nutrition: {}, water: null })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-
-  const loadSummary = useCallback(async (signal) => {
-    if (!userId) return
-
-    try {
-      const date = today()
-      const [foods, water] = await Promise.all([
-        getFoodLogs(userId, date, signal),
-        getWaterLog(userId, date, signal),
-      ])
-      if (!signal?.aborted) {
-        setSummary({ foods, nutrition: sumNutrition(foods), water })
-        setError('')
-      }
-    } catch (loadError) {
-      if (!signal?.aborted && loadError.name !== 'AbortError') setError(loadError.message)
-    } finally {
-      if (!signal?.aborted) setLoading(false)
-    }
-  }, [userId])
+  const [badgeProgress, setBadgeProgress] = useState(null)
+  const [badgeError, setBadgeError] = useState('')
 
   useEffect(() => {
     if (!active || !userId) return
     const controller = new AbortController()
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- State updates follow the asynchronous requests.
-    loadSummary(controller.signal)
+    const date = today()
+    Promise.all([
+      getFoodLogs(userId, date, controller.signal),
+      getWaterLog(userId, date, controller.signal),
+    ])
+      .then(([foods, water]) => {
+        if (!controller.signal.aborted) {
+          setSummary({ foods, nutrition: sumNutrition(foods), water })
+          setError('')
+          setLoading(false)
+        }
+      })
+      .catch((loadError) => {
+        if (!controller.signal.aborted) {
+          setError(loadError.message)
+          setLoading(false)
+        }
+      })
     return () => controller.abort()
-  }, [loadSummary, active, userId])
+  }, [active, userId])
+
+  useEffect(() => {
+    if (!active || !userId) return
+    const controller = new AbortController()
+    getBadgeProgress(userId, controller.signal)
+      .then((progress) => {
+        if (!controller.signal.aborted) {
+          setBadgeProgress(progress)
+          setBadgeError('')
+        }
+      })
+      .catch((loadError) => {
+        if (!controller.signal.aborted) setBadgeError(loadError.message)
+      })
+    return () => controller.abort()
+  }, [active, userId])
 
   if (!userId) {
     return <p className="dashboard-message">Please log in to see your daily dashboard.</p>
@@ -50,6 +65,14 @@ function Dashboard({ active = true }) {
   const calories = summary.nutrition.caloriesKcal || 0
   const protein = summary.nutrition.proteinG || 0
   const water = summary.water?.amountMl || 0
+  const highestBadge = (type) => {
+    if (!badgeProgress) return '—'
+    const highest = badgeProgress.badges
+      .filter((badge) => badge.type === type)
+      .reduce((max, badge) => Math.max(max, badge.number), 0)
+    return highest > 0 ? `${highest}-day badge` : 'None yet'
+  }
+  const streakLabel = (value) => value == null ? '—' : `${value} ${value === 1 ? 'day' : 'days'}`
 
   return (
     <div className="dashboard">
@@ -96,6 +119,26 @@ function Dashboard({ active = true }) {
             ))}
           </ul>
         )}
+      </section>
+
+      <section className="dashboard-achievements">
+        <h2>Streaks &amp; badges</h2>
+        <p className="dashboard-message">Current counts through yesterday.</p>
+        {badgeError && <p className="dashboard-error" role="alert">{badgeError}</p>}
+        <div className="dashboard-achievement-row">
+          {[
+            ['Any goal streak', streakLabel(badgeProgress?.streaks.anyGoal), true],
+            ['All goals streak', streakLabel(badgeProgress?.streaks.allGoals), true],
+            ['Highest any goal badge', highestBadge('ANY_GOAL_STREAK')],
+            ['Highest all goals badge', highestBadge('ALL_GOALS_STREAK')],
+          ].map(([label, value, isStreak]) => (
+            <article className={`dashboard-achievement-card streak-card${isStreak ? '' : ' dashboard-badge-card'}`} key={label}>
+              <span className="dashboard-card-label">{label}</span>
+              <strong>{value}</strong>
+              <span className={isStreak ? 'streak-fire' : 'dashboard-badge-star'} aria-hidden="true">{isStreak ? 'ঌ' : '★'}</span>
+            </article>
+          ))}
+        </div>
       </section>
     </div>
   )

@@ -1,7 +1,3 @@
-.dashboard {
-  max-width: 960px;
-}
-
 .dashboard-header {
   display: flex;
   align-items: flex-start;
@@ -57,6 +53,33 @@
 
 .dashboard-card small {
   color: #75847a;
+}
+
+.dashboard-achievement-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.25rem;
+  border: 1px solid #dce7df;
+  border-color: #ded3bf;
+  background: #f3ecdf;
+  border-radius: 12px;
+}
+
+.dashboard-achievements {
+  margin-top: 2rem;
+}
+
+.dashboard-achievement-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(170px, 1fr));
+  gap: 1rem;
+  overflow-x: auto;
+  margin: 1rem 0 2rem;
+}
+
+.dashboard-achievement-row strong {
+  font-size: 1.25rem;
 }
 
 .dashboard-foods h2 {

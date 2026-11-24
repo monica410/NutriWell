@@ -47,8 +47,8 @@ function Badges({ userId, active = true }) {
         <>
           <h2>Current streaks</h2>
           <div className="badges-streaks">
-            <p><span>At least one goal</span><strong>{days(result.streaks.anyGoal)}</strong></p>
-            <p><span>All goals</span><strong>{days(result.streaks.allGoals)}</strong></p>
+            <p className="streak-card"><span>At least one goal</span><strong>{days(result.streaks.anyGoal)}</strong><span className="streak-fire">ঌ</span></p>
+            <p className="streak-card"><span>All goals</span><strong>{days(result.streaks.allGoals)}</strong><span className="streak-fire">ঌ</span></p>
           </div>
           <p className="badges-note">Through {formatDate(result.streaks.throughDate)}. Today does not count yet.</p>
 

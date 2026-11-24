@@ -112,3 +112,29 @@
     padding: 1.25rem;
   }
 }
+
+.dashboard-achievement-card.streak-card,
+.badges-streaks .streak-card {
+  position: relative;
+  min-height: 4rem;
+}
+
+.streak-fire,
+.dashboard-badge-star {
+  position: absolute;
+  top: 50%;
+  right: 1rem;
+  transform: translateY(-50%);
+  color: #b95050;
+  font-size: 4.5rem;
+  font-weight: 500;
+}
+
+.dashboard-badge-star {
+  left: 0.5rem;
+  color: #baa451;
+}
+
+.dashboard-achievement-card.dashboard-badge-card {
+  padding-left: 5rem;
+}
