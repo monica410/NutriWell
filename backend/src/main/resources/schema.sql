@@ -77,3 +77,23 @@ CREATE TABLE IF NOT EXISTS PersonalGoals (
     )
 );
 
+CREATE TABLE IF NOT EXISTS Badges (
+    badge_id        INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    name            VARCHAR(100) NOT NULL,
+    type            VARCHAR(100) NOT NULL,
+    number          INT NOT NULL,
+    CONSTRAINT unique_badges_type_number UNIQUE (type, number),
+    CONSTRAINT chk_badges_number CHECK (number > 0)
+);
+
+CREATE TABLE IF NOT EXISTS UserBadges (
+    user_id         INT NOT NULL,
+    badge_id        INT NOT NULL,
+    earned_date     DATE NOT NULL,
+    PRIMARY KEY (user_id, badge_id),
+    CONSTRAINT fk_user_badges_user FOREIGN KEY (user_id)
+        REFERENCES Users (user_id) ON DELETE CASCADE,
+    CONSTRAINT fk_user_badges_badge FOREIGN KEY (badge_id)
+        REFERENCES Badges (badge_id) ON DELETE RESTRICT
+);
+
