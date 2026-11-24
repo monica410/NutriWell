@@ -1,0 +1,99 @@
+.badges-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.badges-streaks {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.badges-streaks p {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 1rem;
+  border: 1px solid #dce7df;
+  border-radius: 12px;
+  background: #f4f8f5;
+}
+
+.badges-streaks strong {
+  color: #1f6b45;
+  font-size: clamp(1.25rem, 4vw, 1.75rem);
+}
+
+.badges-note {
+  margin: 0.75rem 0 2.5rem;
+  font-size: 0.9rem;
+}
+
+.badges-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.badges-group-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.badges-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1.25rem;
+  border: 1px solid #dce7df;
+  border-radius: 12px;
+}
+
+.badges-medal {
+  font-size: 1.75rem;
+}
+
+.badges-medal[data-milestone='1'] {
+  color: #927aa5;
+}
+.badges-medal[data-milestone='3'] {
+  color: #708fa8;
+}
+.badges-medal[data-milestone='7'] {
+  color: #7e9b78;
+}
+.badges-medal[data-milestone='30'] {
+  color: #bd916b;
+}
+.badges-medal[data-milestone='100'] {
+  color: #baa451;
+}
+.badges-medal[data-milestone='365'] {
+  color: #b47777;
+}
+
+.badges-card h4 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.badges-card p {
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+}
+
+.badges-error {
+  color: #b42318;
+}
+
+.badges-divider {
+  margin: 2rem 0;
+  border: 0;
+  border-top: 1px solid #dce7df;
+}
